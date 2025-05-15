@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RStudio Web</title>
+    <style>
+        :root {
+            --primary-color: #5B63B7;
+            --secondary-color: #8088D2;
+            --bg-color: #FFFFFF;
+            --text-color: #333333;
+            --border-color: #E0E0E0;
+            --sidebar-bg: #F5F5F5;
+            --console-bg: #F8F8F8;
+            --tab-active: #5B63B7;
+            --tab-inactive: #EFEFEF;
+            --icon-color: #6E6E6E;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* HEADER STYLES */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            height: 48px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .current-file {
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--icon-color);
+        }
+
+        .notifications {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #E74C3C;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .user-profile {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR STYLES */
+        .sidebar {
+            width: 48px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--icon-color);
+        }
+
+        .sidebar-icon:hover, .sidebar-icon.active {
+            color: var(--primary-color);
+            background-color: rgba(91, 99, 183, 0.1);
+        }
+
+        .sidebar-icon.active {
+            border-left: 2px solid var(--primary-color);
+        }
+
+        .sidebar-spacer {
+            flex: 1;
+        }
+
+        /* WORKSPACE STYLES */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* WORKSPACE TOOLBAR */
+        .workspace-toolbar {
+            display: flex;
+            height: 36px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--sidebar-bg);
+        }
+
+        .toolbar-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            color: var(--icon-color);
+        }
+
+        .toolbar-button:hover {
+            color: var(--primary-color);
+            background-color: rgba(91, 99, 183, 0.1);
+        }
+
+        /* TABS AREA */
+        .tabs {
+            display: flex;
+            height: 36px;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 36px;
+            cursor: pointer;
+            background-color: var(--tab-inactive);
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background-color: var(--bg-color);
+            border-bottom: 2px solid var(--tab-active);
+            color: var(--primary-color);
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .tab-close:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* CONTENT AREA */
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .welcome-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 36px;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: var(--text-color);
+            max-width: 600px;
+            margin-bottom: 48px;
+            line-height: 1.5;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 24px;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            gap: 8px;
+        }
+
+        .action-button.secondary {
+            background-color: white;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        /* DATA TABLE VIEW */
+        .data-view {
+            flex: 1;
+            overflow: auto;
+            display: none;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            position: sticky;
+            top: 0;
+            background-color: var(--sidebar-bg);
+            padding: 8px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-type {
+            color: #888;
+            font-size: 12px;
+            display: block;
+        }
+
+        /* SCRIPT EDITOR VIEW */
+        .script-editor {
+            flex: 1;
+            display: none;
+            overflow: hidden;
+        }
+
+        .editor-content {
+            width: 100%;
+            height: 100%;
+            font-family: 'Courier New', Courier, monospace;
+            border: none;
+            padding: 16px;
+            resize: none;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            outline: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* SPLIT VIEW STYLES */
+        .split-view {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .split-pane {
+            flex: 1;
+            overflow: auto;
+            border-right: 1px solid var(--border-color);
+        }
+
+        /* CONSOLE AREA */
+        .console-container {
+            height: 200px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--console-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console-container.collapsed {
+            height: 36px;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            height: 36px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .console-title {
+            font-weight: 500;
+        }
+
+        .console-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .console-control {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--icon-color);
+        }
+
+        .console-content {
+            flex: 1;
+            padding: 8px 16px;
+            overflow: auto;
+            font-family: monospace;
+            white-space: pre;
+            font-size: 14px;
+        }
+
+        .console-container.collapsed .console-content {
+            display: none;
+        }
+
+        .console-prompt {
+            display: flex;
+            padding: 0 16px 8px;
+            align-items: center;
+        }
+
+        .console-container.collapsed .console-prompt {
+            display: none;
+        }
+
+        .console-prompt-symbol {
+            color: var(--primary-color);
+            margin-right: 8px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .console-input {
+            border: none;
+            background: transparent;
+            font-family: monospace;
+            font-size: 14px;
+            flex: 1;
+            outline: none;
+        }
+
+        /* DARK MODE */
+        body.dark-mode {
+            --primary-color: #7C84D8;
+            --secondary-color: #9CA3E8;
+            --bg-color: #1E1E1E;
+            --text-color: #E0E0E0;
+            --border-color: #444444;
+            --sidebar-bg: #252525;
+            --console-bg: #252525;
+            --tab-active: #7C84D8;
+            --tab-inactive: #2D2D2D;
+            --icon-color: #BBBBBB;
+        }
+
+        /* RESPONSIVE STYLES */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                position: absolute;
+                z-index: 100;
+                height: 100%;
+                transition: width 0.3s ease;
+            }
+            
+            .sidebar.open {
+                width: 48px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+
+            .welcome-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* ONBOARDING OVERLAY */
+        .onboarding-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .onboarding-tooltip {
+            position: absolute;
+            background-color: white;
+            border-radius: 4px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+        }
+
+        .onboarding-tooltip::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .onboarding-tooltip.right::after {
+            border-width: 8px 8px 8px 0;
+            border-color: transparent white transparent transparent;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .tooltip-title {
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-content {
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .tooltip-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .tooltip-button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tooltip-button.primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tooltip-button.secondary {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+        }
+
+        /* NOTIFICATIONS PANEL */
+        .notifications-panel {
+            position: absolute;
+            top: 48px;
+            right: 16px;
+            width: 320px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: none;
+        }
+
+        .notifications-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background-color: var(--sidebar-bg);
+        }
+
+        .notification-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        /* FILE UPLOAD MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+        }
+
+        .modal {
+            width: 500px;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+            font-size: 18px;
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .modal-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-button.primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+        }
+
+        .file-types {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .file-type {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-type.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(91, 99, 183, 0.1);
+        }
+
+        .file-type-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .file-dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 4px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-dropzone:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(91, 99, 183, 0.05);
+        }
+
+        .dropzone-text {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        /* CONTEXT MENU */
+        .context-menu {
+            position: absolute;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1500;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--sidebar-bg);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="app-title">RStudio Web</div>
+        <div class="current-file">Welcome</div>
+        <div class="header-controls">
+            <div class="theme-toggle" id="theme-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </div>
+            <div class="notifications" id="notifications-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <div class="notification-count">2</div>
+            </div>
+            <div class="user-profile" id="user-profile"></div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="notifications-panel" id="notifications-panel">
+        <div class="notifications-header">Notifications</div>
+        <div class="notification-item">
+            <div class="notification-title">Package Update Available</div>
+            <div class="notification-message">ggplot2 3.5.0 is now available. Click to update.</div>
+        </div>
+        <div class="notification-item">
+            <div class="notification-title">Script Execution Completed</div>
+            <div class="notification-message">analysis.R finished running (3.2s).</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-icon active" id="home-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <div class="sidebar-icon" id="files-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </div>
+            <div class="sidebar-icon" id="plots-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </div>
+            <div class="sidebar-icon" id="help-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-icon" id="settings-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </div>
+        </div>
+
+        <!-- WORKSPACE -->
+        <div class="workspace">
+            <!-- WORKSPACE TOOLBAR -->
+            <div class="workspace-toolbar">
+                <div class="toolbar-button" id="new-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                </div>
+                <div class="toolbar-button" id="plot-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
+                <div class="toolbar-button" id="package-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                </div>
+                <div class="toolbar-button" id="split-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="tabs" id="tabs">
+                <div class="tab active" data-target="welcome">Welcome</div>
+            </div>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <!-- WELCOME SCREEN -->
+                <div class="welcome-screen" id="welcome-view">
+                    <div class="welcome-title">Welcome to RStudio Web</div>
+                    <div class="welcome-subtitle">A modern, intuitive web-based R environment inspired by VS Code. Get started by importing a dataset or creating a new R script.</div>
+                    <div class="welcome-actions">
+                        <div class="action-button" id="import-dataset-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Import Dataset
+                        </div>
+                        <div class="action-button secondary" id="new-script-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            New R Script
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATA VIEW (HIDDEN BY DEFAULT) -->
+                <div class="data-view" id="data-view">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <span>Name</span>
+                                    <span class="data-type">character</span>
+                                </th>
+                                <th>
+                                    <span>Species</span>
+                                    <span class="data-type">factor</span>
+                                </th>
+                                <th>
+                                    <span>Sepal.Length</span>
+                                    <span class="data-type">numeric</span>
+                                </th>
+                                <th>
+                                    <span>Sepal.Width</span>
+                                    <span class="data-type">numeric</span>
+                                </th>
+                                <th>
+                                    <span>Petal.Length</span>
+                                    <span class="data-type">numeric</span>
+                                </th>
+                                <th>
+                                    <span>Petal.Width</span>
+                                    <span class="data-type">numeric</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>setosa</td>
+                                <td>5.1</td>
+                                <td>3.5</td>
+                                <td>1.4</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>setosa</td>
+                                <td>4.9</td>
+                                <td>3.0</td>
+                                <td>1.4</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>setosa</td>
+                                <td>4.7</td>
+                                <td>3.2</td>
+                                <td>1.3</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>setosa</td>
+                                <td>4.6</td>
+                                <td>3.1</td>
+                                <td>1.5</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>setosa</td>
+                                <td>5.0</td>
+                                <td>3.6</td>
+                                <td>1.4</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>setosa</td>
+                                <td>5.4</td>
+                                <td>3.9</td>
+                                <td>1.7</td>
+                                <td>0.4</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>setosa</td>
+                                <td>4.6</td>
+                                <td>3.4</td>
+                                <td>1.4</td>
+                                <td>0.3</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>setosa</td>
+                                <td>5.0</td>
+                                <td>3.4</td>
+                                <td>1.5</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td>setosa</td>
+                                <td>4.4</td>
+                                <td>2.9</td>
+                                <td>1.4</td>
+                                <td>0.2</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td>setosa</td>
+                                <td>4.9</td>
+                                <td>3.1</td>
+                                <td>1.5</td>
+                                <td>0.1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- SCRIPT EDITOR VIEW -->
+                <div class="script-editor" id="script-view">
+                    <textarea class="editor-content" id="script-content"># R Script
+# Created in RStudio Web
+
+# Load libraries
+library(tidyverse)
+library(ggplot2)
+
+# Load dataset
+data(iris)
+
+# Explore data
+head(iris)
+summary(iris)
+
+# Create a plot
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+  geom_point() +
+  labs(title = "Iris Dataset: Sepal Dimensions by Species",
+       x = "Sepal Length", 
+       y = "Sepal Width") +
+  theme_minimal()
+</textarea>
+                </div>
+
+                <!-- SPLIT VIEW -->
+                <div class="split-view" id="split-view">
+                    <div class="split-pane" id="left-pane">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <span>Name</span>
+                                        <span class="data-type">character</span>
+                                    </th>
+                                    <th>
+                                        <span>Species</span>
+                                        <span class="data-type">factor</span>
+                                    </th>
+                                    <th>
+                                        <span>Sepal.Length</span>
+                                        <span class="data-type">numeric</span>
+                                    </th>
+                                    <th>
+                                        <span>Sepal.Width</span>
+                                        <span class="data-type">numeric</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>setosa</td>
+                                    <td>5.1</td>
+                                    <td>3.5</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>setosa</td>
+                                    <td>4.9</td>
+                                    <td>3.0</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>setosa</td>
+                                    <td>4.7</td>
+                                    <td>3.2</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>setosa</td>
+                                    <td>4.6</td>
+                                    <td>3.1</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>setosa</td>
+                                    <td>5.0</td>
+                                    <td>3.6</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="split-pane" id="right-pane">
+                        <textarea class="editor-content">
+# Analysis of iris dataset
+summary(iris)
+
+# Filter for setosa
+setosa <- iris[iris$Species == "setosa", ]
+summary(setosa)
+                        </textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONSOLE -->
+            <div class="console-container" id="console">
+                <div class="console-header">
+                    <div class="console-title">Console</div>
+                    <div class="console-controls">
+                        <div class="console-control" id="console-clear">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </div>
+                        <div class="console-control" id="console-toggle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="console-content" id="console-content">
+R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+Type 'help()' for help, or 'q()' to quit.
+
+> data(iris)
+                </div>
+                <div class="console-prompt">
+                    <div class="console-prompt-symbol">></div>
+                    <input type="text" class="console-input" id="console-input" placeholder="Enter R command...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONBOARDING OVERLAY (HIDDEN BY DEFAULT) -->
+    <div class="onboarding-overlay" id="onboarding-overlay">
+        <div class="onboarding-tooltip right" style="top: 100px; left: 60px;">
+            <div class="tooltip-title">File Browser</div>
+            <div class="tooltip-content">Access your files and datasets. Click here to browse or upload data files.</div>
+            <div class="tooltip-actions">
+                <div class="tooltip-button secondary" id="skip-onboarding">Skip</div>
+                <div class="tooltip-button primary" id="next-onboarding">Next</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT DATASET MODAL -->
+    <div class="modal-overlay" id="import-modal">
+        <div class="modal">
+            <div class="modal-header">Import Dataset</div>
+            <div class="modal-content">
+                <div class="file-types">
+                    <div class="file-type selected" data-type="csv">
+                        <div class="file-type-icon">.csv</div>
+                        <div>CSV File</div>
+                    </div>
+                    <div class="file-type" data-type="xlsx">
+                        <div class="file-type-icon">.xlsx</div>
+                        <div>Excel File</div>
+                    </div>
+                    <div class="file-type" data-type="rdata">
+                        <div class="file-type-icon">.rdata</div>
+                        <div>R Data</div>
+                    </div>
+                </div>
+                <div class="file-dropzone" id="file-dropzone">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <div class="dropzone-text">Drag and drop a file here or click to select</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-button secondary" id="cancel-import">Cancel</div>
+                <div class="modal-button primary" id="confirm-import">Import</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" id="view-data">View Data</div>
+        <div class="context-menu-item" id="plot-data">Plot Data</div>
+        <div class="context-menu-item" id="export-data">Export Data</div>
+        <div class="context-menu-item" id="filter-data">Filter Data</div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('theme-toggle');
+        const notificationsButton = document.getElementById('notifications-button');
+        const notificationsPanel = document.getElementById('notifications-panel');
+        const welcomeView = document.getElementById('welcome-view');
+        const dataView = document.getElementById('data-view');
+        const scriptView = document.getElementById('script-view');
+        const splitView = document.getElementById('split-view');
+        const importDatasetButton = document.getElementById('import-dataset-button');
+        const newScriptButton = document.getElementById('new-script-button');
+        const importModal = document.getElementById('import-modal');
+        const cancelImport = document.getElementById('cancel-import');
+        const confirmImport = document.getElementById('confirm-import');
+        const fileTypes = document.querySelectorAll('.file-type');
+        const console = document.getElementById('console');
+        const consoleToggle = document.getElementById('console-toggle');
+        const consoleInput = document.getElementById('console-input');
+        const consoleContent = document.getElementById('console-content');
+        const consoleClear = document.getElementById('console-clear');
+        const splitButton = document.getElementById('split-button');
+        const contextMenu = document.getElementById('context-menu');
+        const onboardingOverlay = document.getElementById('onboarding-overlay');
+        const skipOnboarding = document.getElementById('skip-onboarding');
+        const nextOnboarding = document.getElementById('next-onboarding');
+        const helpIcon = document.getElementById('help-icon');
+        const tabs = document.getElementById('tabs');
+        const currentFile = document.querySelector('.current-file');
+
+        // State
+        let darkMode = false;
+        let activeView = 'welcome';
+        let onboardingStep = 0;
+        
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+            }
+        });
+
+        // Notifications Panel
+        notificationsButton.addEventListener('click', () => {
+            notificationsPanel.style.display = notificationsPanel.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // Hide notifications panel when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!notificationsButton.contains(e.target) && !notificationsPanel.contains(e.target)) {
+                notificationsPanel.style.display = 'none';
+            }
+        });
+
+        // View Switching
+        function switchView(view) {
+            // Hide all views
+            welcomeView.style.display = 'none';
+            dataView.style.display = 'none';
+            scriptView.style.display = 'none';
+            splitView.style.display = 'none';
+
+            // Show selected view
+            if (view === 'welcome') {
+                welcomeView.style.display = 'flex';
+                currentFile.textContent = 'Welcome';
+            } else if (view === 'data') {
+                dataView.style.display = 'block';
+                currentFile.textContent = 'iris.csv';
+            } else if (view === 'script') {
+                scriptView.style.display = 'block';
+                currentFile.textContent = 'script.R';
+            } else if (view === 'split') {
+                splitView.style.display = 'flex';
+                currentFile.textContent = 'Split View';
+            }
+
+            activeView = view;
+        }
+
+        // Import Dataset Button
+        importDatasetButton.addEventListener('click', () => {
+            importModal.style.display = 'flex';
+        });
+
+        // New Script Button
+        newScriptButton.addEventListener('click', () => {
+            // Add a new tab
+            const newTab = document.createElement('div');
+            newTab.className = 'tab';
+            newTab.textContent = 'script.R';
+            newTab.dataset.target = 'script';
+            
+            // Make all tabs inactive
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Make new tab active
+            newTab.classList.add('active');
+            
+            tabs.appendChild(newTab);
+            
+            // Switch to script view
+            switchView('script');
+        });
+
+        // Split View
+        splitButton.addEventListener('click', () => {
+            // Add a new tab if it doesn't exist
+            let splitTabExists = false;
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.dataset.target === 'split') {
+                    splitTabExists = true;
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            if (!splitTabExists) {
+                const newTab = document.createElement('div');
+                newTab.className = 'tab active';
+                newTab.textContent = 'Split View';
+                newTab.dataset.target = 'split';
+                
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                tabs.appendChild(newTab);
+            }
+            
+            switchView('split');
+        });
+
+        // Cancel Import
+        cancelImport.addEventListener('click', () => {
+            importModal.style.display = 'none';
+        });
+
+        // Confirm Import
+        confirmImport.addEventListener('click', () => {
+            importModal.style.display = 'none';
+            
+            // Add a new tab
+            const newTab = document.createElement('div');
+            newTab.className = 'tab';
+            newTab.textContent = 'iris.csv';
+            newTab.dataset.target = 'data';
+            
+            // Make all tabs inactive
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Make new tab active
+            newTab.classList.add('active');
+            
+            tabs.appendChild(newTab);
+            
+            // Switch to data view
+            switchView('data');
+        });
+
+        // File Type Selection
+        fileTypes.forEach(fileType => {
+            fileType.addEventListener('click', () => {
+                fileTypes.forEach(ft => ft.classList.remove('selected'));
+                fileType.classList.add('selected');
+            });
+        });
+
+        // Console Toggle
+        consoleToggle.addEventListener('click', () => {
+            console.classList.toggle('collapsed');
+            if (console.classList.contains('collapsed')) {
+                consoleToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+            } else {
+                consoleToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+            }
+        });
+
+        // Console Input
+        consoleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const command = consoleInput.value;
+                consoleContent.textContent += `\n> ${command}`;
+                
+                // Simulate R response based on command
+                if (command.includes('plot') || command.includes('ggplot')) {
+                    consoleContent.textContent += '\nPlot created. See Plots panel.';
+                } else if (command.includes('summary')) {
+                    consoleContent.textContent += '\n  Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   \n Min.   :4.300   Min.   :2.000   Min.   :1.000   Min.   :0.100  \n 1st Qu.:5.100   1st Qu.:2.800   1st Qu.:1.600   1st Qu.:0.300  \n Median :5.800   Median :3.000   Median :4.350   Median :1.300  \n Mean   :5.843   Mean   :3.057   Mean   :3.758   Mean   :1.199  \n 3rd Qu.:6.400   3rd Qu.:3.300   3rd Qu.:5.100   3rd Qu.:1.800  \n Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500  ';
+                } else if (command.includes('head')) {
+                    consoleContent.textContent += '\n  Sepal.Length Sepal.Width Petal.Length Petal.Width Species\n1          5.1         3.5          1.4         0.2  setosa\n2          4.9         3.0          1.4         0.2  setosa\n3          4.7         3.2          1.3         0.2  setosa\n4          4.6         3.1          1.5         0.2  setosa\n5          5.0         3.6          1.4         0.2  setosa\n6          5.4         3.9          1.7         0.4  setosa';
+                } else if (command.includes('library')) {
+                    const library = command.split('(')[1].split(')')[0];
+                    consoleContent.textContent += `\nLoading required package: ${library}`;
+                } else if (command.includes('help')) {
+                    consoleContent.textContent += '\nHelp documentation is available in the Help panel.';
+                } else {
+                    consoleContent.textContent += '\nCommand executed successfully.';
+                }
+                
+                consoleInput.value = '';
+                
+                // Scroll to bottom
+                consoleContent.scrollTop = consoleContent.scrollHeight;
+            }
+        });
+
+        // Console Clear
+        consoleClear.addEventListener('click', () => {
+            consoleContent.textContent = 'R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"\nCopyright (C) 2022 The R Foundation for Statistical Computing\nPlatform: x86_64-pc-linux-gnu (64-bit)\n\nType \'help()\' for help, or \'q()\' to quit.\n\n>';
+        });
+
+        // Context Menu
+        document.addEventListener('contextmenu', (e) => {
+            if (dataView.contains(e.target) && e.target.tagName === 'TD') {
+                e.preventDefault();
+                
+                const rect = e.target.getBoundingClientRect();
+                contextMenu.style.top = `${rect.bottom}px`;
+                contextMenu.style.left = `${rect.left}px`;
+                contextMenu.style.display = 'block';
+            }
+        });
+
+        // Hide context menu when clicking elsewhere
+        document.addEventListener('click', () => {
+            contextMenu.style.display = 'none';
+        });
+
+        // Onboarding
+        helpIcon.addEventListener('click', () => {
+            onboardingOverlay.style.display = 'block';
+            onboardingStep = 0;
+            updateOnboardingStep();
+        });
+
+        skipOnboarding.addEventListener('click', () => {
+            onboardingOverlay.style.display = 'none';
+        });
+
+        nextOnboarding.addEventListener('click', () => {
+            onboardingStep++;
+            if (onboardingStep > 3) {
+                onboardingOverlay.style.display = 'none';
+            } else {
+                updateOnboardingStep();
+            }
+        });
+
+        function updateOnboardingStep() {
+            const tooltip = document.querySelector('.onboarding-tooltip');
+            const title = document.querySelector('.tooltip-title');
+            const content = document.querySelector('.tooltip-content');
+            
+            if (onboardingStep === 0) {
+                tooltip.style.top = '100px';
+                tooltip.style.left = '60px';
+                title.textContent = 'File Browser';
+                content.textContent = 'Access your files and datasets. Click here to browse or upload data files.';
+            } else if (onboardingStep === 1) {
+                tooltip.style.top = '200px';
+                tooltip.style.left = '60px';
+                title.textContent = 'Environment';
+                content.textContent = 'View your R objects and variables. This panel shows all the datasets and variables in your current session.';
+            } else if (onboardingStep === 2) {
+                tooltip.style.top = '175px';
+                tooltip.style.left = '300px';
+                title.textContent = 'Split View';
+                content.textContent = 'Compare datasets or view code and data side by side. Click this icon to enable split view mode.';
+            } else if (onboardingStep === 3) {
+                tooltip.style.top = '450px';
+                tooltip.style.left = '300px';
+                title.textContent = 'Console';
+                content.textContent = 'Run R commands directly in this console. Use the toggle button to collapse or expand the console view.';
+            }
+        }
+
+        // Tab Click Handler
+        tabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                const target = e.target.dataset.target;
+                
+                // Make all tabs inactive
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Make clicked tab active
+                e.target.classList.add('active');
+                
+                // Switch view
+                switchView(target);
+            }
+        });
+    </script>
+</body>
+</html>
